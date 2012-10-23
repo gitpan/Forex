@@ -1,7 +1,6 @@
 #!/usr/bin/perl
 
 use Test::More;
-use lib '../';
 
 use_ok('LWP::UserAgent');
 use_ok('Forex');
@@ -35,5 +34,11 @@ ok($oxr->get_rates(), "get rates for today works");
 ok($oxr->get_rates( '2012-10-17' ) , "get_rates works" );
 
 ok( $oxr->get_rates_from ( '2012-10-01', '2012-10-19') , "successfully download from 2012-10-01 to 2012-10-19" );
+
+diag "checking for functions ";
+
+can_ok( $oxr , 'new' );
+can_ok( $oxr , 'get_rate_of' );
+can_ok( $oxr , '_fetch_data' );
 
 done_testing();

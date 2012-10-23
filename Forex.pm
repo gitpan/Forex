@@ -2,26 +2,27 @@ package Forex;
 
 use JSON::XS;
 use DateTime;
+use LWP::UserAgent;
 
 our $LASTERROR = undef;
 
-$VERSION  = '1.0';
+$VERSION  = '1.1';
 
 =pod
 
 =head1 NAME
 
-Forex::OXR - Historic Foreign Exchange Rates from Open Exchange Rates 
+Forex - Historic Foreign Exchange Rates from Open Exchange Rates 
 
 =head1 VERSION
 
-1.0
+1.1
 
 =head1 SYNOPSIS
 
- use Forex::OXR;
+ use Forex;
  
- my $oxr = new Forex::OXR( 'APP_ID' => $app_id, 'BASE' => 'USD');
+ my $oxr = new Forex( 'APP_ID' => $app_id, 'BASE' => 'USD');
  
  #__fetch and initialize daily rates from $from_date to $to_date in yyyy-mm-dd 
  $oxr->get_rates_from ( $from_date, $to_date );
@@ -45,9 +46,9 @@ Forex::OXR - Historic Foreign Exchange Rates from Open Exchange Rates
 
 =head2 Constructors
 
-=head3 new Forex::OXR()
+=head3 new Forex()
 
-returns new Forex::OXR object with defaults values for 
+returns new Forex object with defaults values for 
 OXE_HOME = 'http://openexchangerates.org',
 API_HOOK = 'api',
 APP_ID = 'temp-e091fc14b3884a516d6cc2c299a',
@@ -73,7 +74,7 @@ sub new {
 
 =pod
 
-=head3 get_rate_of( $currency, $date )
+=head3 get_rate_of( $currency, <$date> )
 
 This method returns forex rate for $currency on $date in USD, $date should be in C<yyyy-mm-dd> format.
 This method looks for currency rates in $obj->{ CURRENCIES } array.Which is filled by C<get_rates> or C<get_rates_from()> methods
@@ -85,10 +86,18 @@ my $AUD = $oxr->get_rate_of( 'AUD' , '2012-09-10' );
 
 sub get_rate_of {
 	my ($self, $currency, $date ) = @_;
+
+	if (!$date)
+		{ my $_d = DateTime->now();
+		  $date = join "-",($_d->year, $_d->month, $_d->day); }
+		  
 	if ($date !~ m/-/)
 		{ $LASTERROR = 1;
 		  $self->{ERROR} = 'date parameter not in in yyy-mm-dd format';
 		  return undef;                                               }
+
+	if( !$self->{ 'CURRENCIES'} || !$self->{'CURRENCIES'}->{$date})
+	  { $self->get_rates( $date ); }
 		  
 	return $self->{ 'CURRENCIES' }->{ $currency }->{ $date };
 }
