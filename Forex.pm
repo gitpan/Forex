@@ -6,7 +6,7 @@ use LWP::UserAgent;
 
 our $LASTERROR = undef;
 
-$VERSION  = '1.1';
+$VERSION  = '1.2';
 
 =pod
 
@@ -16,7 +16,7 @@ Forex - Historic Foreign Exchange Rates from Open Exchange Rates
 
 =head1 VERSION
 
-1.1
+1.2
 
 =head1 SYNOPSIS
 
@@ -49,7 +49,7 @@ Forex - Historic Foreign Exchange Rates from Open Exchange Rates
 =head3 new Forex()
 
 returns new Forex object with defaults values for 
-OXE_HOME = 'http://openexchangerates.org',
+OXR_HOME = 'http://openexchangerates.org',
 API_HOOK = 'api',
 APP_ID = 'temp-e091fc14b3884a516d6cc2c299a',
 BASE = 'USD'
@@ -318,7 +318,7 @@ sub last_error_message {
 
 =head3 ERROR
 
-on errors module sets $LASTERROR global variable which can be accessed by $Forex::OXR::LASTERROR.
+on errors module sets $LASTERROR global variable which can be accessed by $Forex::LASTERROR.
 And error message can be accessed via last_error_message() or last_error()
 
 =head3 KNOWN BUGS
@@ -326,7 +326,7 @@ And error message can be accessed via last_error_message() or last_error()
 
 =head3 SUPPORT
 
-please submit known issues or bugs to mail4bhavin@gmail.com
+please submit known issues or bugs to mail4bhavin@yahoo.com
 
 =head3 AUTHOR
 
