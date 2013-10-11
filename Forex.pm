@@ -6,7 +6,7 @@ use LWP::UserAgent;
 
 our $LASTERROR = undef;
 
-$VERSION  = '1.2';
+$FOREX::VERSION  = '1.3';
 
 =pod
 
@@ -16,31 +16,30 @@ Forex - Historic Foreign Exchange Rates from Open Exchange Rates
 
 =head1 VERSION
 
-1.2
+1.3
 
 =head1 SYNOPSIS
 
  use Forex;
  
- my $oxr = new Forex( 'APP_ID' => $app_id, 'BASE' => 'USD');
+ my $forex = new Forex( 'APP_ID' => $app_id, 'BASE' => 'USD');
  
  #__fetch and initialize daily rates from $from_date to $to_date in yyyy-mm-dd 
- $oxr->get_rates_from ( $from_date, $to_date );
+ $forex->get_rates_from ( $from_date, $to_date );
 
  #___ fetches rates for $date (yyyy-mm-dd)
- $oxr->get_rates( $date );
+ $forex->get_rates( $date );
 	 
  #___ fetches reates for today 
- $oxr->get_rates();
+ $forex->get_rates();
 	
  #___ gives AUD on 2012-09-01 in USD Base currency
- $usd = $oxr->get_rate_of ( 'AUD', '2012-09-01' );  
+ $usd = $forex->get_rate_of ( 'AUD', '2012-09-01' );  
  
- if ($Forex::OXR::LASTERROR )
+ if ($Forex::LASTERROR )
     { print "\n Something went wrong" , $oxr->last_error_message(); }  
 
 =head1 DESCRIPTION
-
 
 =head1 METHODS
 
@@ -49,15 +48,23 @@ Forex - Historic Foreign Exchange Rates from Open Exchange Rates
 =head3 new Forex()
 
 returns new Forex object with defaults values for 
-OXR_HOME = 'http://openexchangerates.org',
-API_HOOK = 'api',
-APP_ID = 'temp-e091fc14b3884a516d6cc2c299a',
-BASE = 'USD'
 
- my $oxe = new Forex::OXR( OXR_HOME => 'https://openexchangerates.org',
- 									API_HOOK => 'api',
- 									APP_ID   => 'temp-e091fc14b3884a516d6cc2c299a',
- 									BASE     => 'AUD');
+=over 2
+
+=item OXR_HOME = 'http://openexchangerates.org',
+
+=item API_HOOK = 'api',
+
+=item APP_ID   = 'temp-e091fc14b3884a516d6cc2c299a',
+
+=item BASE     = 'USD'
+
+=back
+
+ my $oxe = new Forex( OXR_HOME => 'https://openexchangerates.org',
+                      API_HOOK => 'api',
+                      APP_ID   => 'temp-e091fc14b3884a516d6cc2c299a',
+                      BASE     => 'AUD');
 
 =cut
 
@@ -65,10 +72,10 @@ sub new {
 	my $class = shift;
 	my $self = {@_};
 	bless $self, $class;
-	$self->{ 'OXR_HOME' } = 'http://openexchangerates.org';
-	$self->{ 'API_HOOK' } = 'api';
-	$self->{ 'APP_ID'   } = 'temp-e091fc14b3884a516d6cc2c299a' if !$self->{APP_ID};
-	$self->{ 'BASE'     } = 'USD';
+	$self->{ 'OXR_HOME' } = 'http://openexchangerates.org'     unless defined ($self->{'OXR_HOME'});
+	$self->{ 'API_HOOK' } = 'api'                              unless defined ($self->{'API_HOOK'});
+	$self->{ 'APP_ID'   } = 'temp-e091fc14b3884a516d6cc2c299a' unless defined ($self->{APP_ID});
+	$self->{ 'BASE'     } = 'USD'                              unless defined ($self->{'BASE'});
 	return $self;
 }
 
@@ -76,9 +83,7 @@ sub new {
 
 =head3 get_rate_of( $currency, <$date> )
 
-This method returns forex rate for $currency on $date in USD, $date should be in C<yyyy-mm-dd> format.
-This method looks for currency rates in $obj->{ CURRENCIES } array.Which is filled by C<get_rates> or C<get_rates_from()> methods
-
+This method returns forex rate for C<$currency> on $date in BASE currency, $date should be in C<yyyy-mm-dd> format.
 
 my $AUD = $oxr->get_rate_of( 'AUD' , '2012-09-10' );
 
@@ -93,7 +98,7 @@ sub get_rate_of {
 		  
 	if ($date !~ m/-/)
 		{ $LASTERROR = 1;
-		  $self->{ERROR} = 'date parameter not in in yyy-mm-dd format';
+		  $self->{ERROR} = 'date parameter not is in yyyy-mm-dd format';
 		  return undef;                                               }
 
 	if( !$self->{ 'CURRENCIES'} || !$self->{'CURRENCIES'}->{$date})
@@ -127,7 +132,7 @@ sub _fetch_data {
 
 =head3 get_rates_from ( $from_date , $to_date ) 
 
-downloads and fills in values for all currencies in the $obj->{CURRENCIES} hash for $from_date - $to_date
+downloads and fills CURRENCIES hash for $from_date to $to_date
 both dates should be in C<yyyy-mm-dd> formate
 
 =cut
@@ -143,12 +148,12 @@ sub get_rates_from {
 		
 	   ( $y, $m , $d ) = split '-' , $from;
 	     $from_dt = new DateTime( year => $y, month => $m , day => $d );
-		( $y, $m , $d ) = split '-' , $to;
+	   ( $y, $m , $d ) = split '-' , $to;
 	     $to_dt   = new DateTime( year => $y, month => $m , day => $d );
 	
 	while ( DateTime->compare( $from_dt , $to_dt ) )
 	{ $self->get_rates( $from_dt->ymd('-') );
-		$from_dt->add( days => 1 );	              }
+	  $from_dt->add( days => 1 );	              }
 	
 	1;
 }
@@ -157,9 +162,8 @@ sub get_rates_from {
 
 =head3 get_rates ( <$day> ) 
 
-downloads and fills in values for all currencies in the $obj->{CURRENCIES} hash for given C<$day>
-$day should be in C<yyyy-mm-dd> formate
-if $day is skipped , it uses C<todays date>,
+downloads and fills in values for all currencies in the CURRENCIES hash for given C<$day>
+$day should be in C<yyyy-mm-dd> formate if $day is skipped , it uses C<todays date>,
 
 =cut
 
@@ -168,10 +172,10 @@ sub get_rates {
 	my ($request_day, $response_day );
 
 	if ( !$day )
-		{ $request_day = DateTime->now();
-		  $request_day = new DateTime ( year  => $request_day->year,
-			  					 				  month => $request_day->month,
-			  									  day   => $request_day->day );     	 }
+	{ $request_day = DateTime->now();
+	  $request_day = new DateTime ( year  => $request_day->year,
+				        month => $request_day->month,
+			                day   => $request_day->day );     	 }
 	else
 	   { my ( $y, $m , $d ) = split '-' , $day;
 	     $request_day = new DateTime( year => $y, month => $m , day => $d ); }
@@ -188,27 +192,25 @@ sub get_rates {
 	   { $LASTERROR = 1; $self->{ERROR} = "BASE Currency is not defined "; return undef;}
 	   	   	   	   	
 	$self->{'REQUEST_URL'} = join "/", ( $self->{ 'OXR_HOME'},
-  												    $self->{'API_HOOK' },
-	  												 'historical'        ,
-	  												 $request_day->ymd('-') . '.json' );
-
+  				             $self->{'API_HOOK' },
+	  				     'historical'        ,
+	  				     $request_day->ymd('-') . '.json' );
  	$self->{'REQUEST_URL'} .= '?app_id='   . $self->{'APP_ID'}
-								  .   "&base="    . $self->{'BASE'} ;
+			       .   "&base="    . $self->{'BASE'} ;
 	
 	$self->_fetch_data();
 		
 	if ( $self->{ CONTENT } )
-	 	{ $response_day = DateTime->from_epoch( epoch => $self->{ 'CONTENT' }->{ 'timestamp' } );
-		  $response_day = new DateTime (	year  => $response_day->year,
-		  											month => $response_day->month,
-		  											day   => $response_day->day );                   		}
+	{ $response_day = DateTime->from_epoch( epoch => $self->{ 'CONTENT' }->{ 'timestamp' } );
+	  $response_day = new DateTime (	year  => $response_day->year,
+	  					month => $response_day->month,
+	  	  			        day   => $response_day->day );          }
 
 	if ( DateTime->compare($request_day , $response_day) )
-		{ $LASTERROR = 1; $self->{ERROR} = "Request Date is not equal to Received Date"; }
+	{ $LASTERROR = 1; $self->{ERROR} = "Request Date is not equal to Received Date"; }
 			
 	my $hash = $self->{ 'CONTENT' }->{ 'rates' };	
 	map {	$self->{ 'CURRENCIES' } { $_ } { $response_day->ymd() } = $hash->{ $_}; } keys( %$hash );	
-		
 	delete $self->{ 'CONTENT' };
 								
 }
@@ -231,17 +233,15 @@ sub get_currency_symbols {
 	if ( !$self->{'API_HOOK'} )
 	   { $LASTERROR = 1; $self->{ERROR} = "API HOOK is not defined ";      return undef;}
 
-      $self->{'REQUEST_URL'} = join "/" , ( 	 $self->{ 'OXR_HOME'},
-		  													 $self->{ 'API_HOOK'},
-		   												 $currenciesJSON
-				   										);  
-	#_____ fetching data	
-	   $self->_fetch_data();
+         $self->{'REQUEST_URL'} = join "/" , ( $self->{ 'OXR_HOME'},
+				               $self->{ 'API_HOOK'},
+		   			       $currenciesJSON   );  
+        #_____ fetching data	
+        $self->_fetch_data();
 	
 	my $hash = $self->{ 'CONTENT' };
-		map {	$self->{ 'CURRENCIES' } { $_ } { 'description' } = $hash->{ $_}; } keys( %$hash );
-
-		delete $self->{ 'CONTENT' };	   
+	map {	$self->{ 'CURRENCIES' } { $_ } { 'description' } = $hash->{ $_}; } keys( %$hash );
+	delete $self->{ 'CONTENT' };	   
 }
 
 =pod
@@ -278,7 +278,7 @@ sets app_id for all succeeding requests. return current app_id if the parameter 
 
 =cut
 
-sub app_id			{ 	return ($_[1]) ? $_[0]->{ 'APP_ID'  } = $_[1] : $_[0]->{ 'APP_ID'   }; }
+sub app_id	  { 	return ($_[1]) ? $_[0]->{ 'APP_ID'  } = $_[1] : $_[0]->{ 'APP_ID'   }; }
 
 =pod
 
@@ -330,7 +330,7 @@ please submit known issues or bugs to mail4bhavin@yahoo.com
 
 =head3 AUTHOR
 
-Bhavin Patel <mail4bhavin@gmail.com
+Bhavin Patel
 
 =head3 COPYRIGHT AND LICENSE
 
